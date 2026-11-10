@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>개인정보처리방침 - 급해요</title><link rel="stylesheet" href="style.css"></head>
+<body><main>
+<h1>개인정보처리방침</h1>
+<p class="muted">시행일: 2026년 11월 10일 · 서비스: 급해요(근처 화장실 찾기) 안드로이드 앱 · <a href="#en">English</a></p>
+
+<p>'급해요 운영자'(이하 "운영자")는 「개인정보 보호법」 등 관련 법령을 지키며, 이용자의 개인정보를 소중히 다룹니다. 이 방침은 급해요 앱(이하 "앱")에서 어떤 정보를 어떻게 처리하는지 알려드립니다.</p>
+
+<h2>1. 처리하는 개인정보 항목과 목적</h2>
+<table>
+<tr><th>구분</th><th>항목</th><th>목적</th></tr>
+<tr><td>리뷰·제보를 처음 남길 때 자동 생성</td><td>무작위로 만들어지는 익명 사용자 식별자(이메일·전화번호 등 실명 정보 없음)</td><td>내가 쓴 리뷰의 수정·삭제, 중복 투표 방지, 도배 방지</td></tr>
+<tr><td>이용자가 직접 입력</td><td>닉네임, 리뷰(별점·태그·내용), 비밀번호 제보, 개방시간 수정, 등록한 화장실 정보(이름·화장실 위치·시설), 신고 내용</td><td>다른 이용자에게 화장실 정보와 리뷰를 보여주기, 부적절한 콘텐츠 관리</td></tr>
+<tr><td>서비스 이용 과정에서 자동 수집</td><td>접속 IP 주소, 요청 시각(서버 기록)</td><td>보안·장애 대응, 부정 이용 방지</td></tr>
+<tr><td>광고(Google AdMob)</td><td>광고 ID, 기기·앱 정보, 대략적인 위치(IP 기반), 광고 상호작용 정보</td><td>광고 표시와 광고 성과 측정 (Google이 처리)</td></tr>
+</table>
+<div class="card"><strong>위치정보 안내</strong><br>앱은 '가장 가까운 화장실'을 찾기 위해 휴대폰의 위치를 사용하지만, <strong>내 위치는 휴대폰 안에서만 계산에 쓰이며 운영자의 서버로 전송하거나 저장하지 않습니다.</strong> 화장실을 새로 등록할 때에는 이용자가 지도에서 지정한 <em>화장실의 위치</em>만 서버에 저장됩니다. 위치 권한은 언제든 휴대폰 설정에서 끌 수 있습니다.</div>
+
+<h2>2. 보유 및 이용 기간</h2>
+<ul>
+<li>익명 계정, 닉네임, 리뷰, 투표: 이용자가 앱의 <strong>설정 → 내 데이터 삭제</strong>를 실행할 때까지 보관하며, 삭제 즉시 파기합니다.</li>
+<li>비밀번호 제보·개방시간 수정 기록: 화장실 정보의 정확성을 위해 보관하되, 계정 삭제 시 작성자 식별자를 지워 누구의 제보인지 알 수 없게 합니다.</li>
+<li>이용자가 등록한 화장실: 다른 이용자를 위한 공공 정보로 남으며, 계정 삭제 시 작성자 정보를 지웁니다.</li>
+<li>서버 접속 기록: 서버 제공사(Supabase)의 기록 보관 정책에 따라 최대 90일 이내 자동 삭제됩니다.</li>
+<li>관계 법령에 따라 보존할 필요가 있는 경우 해당 기간 동안 보관합니다.</li>
+</ul>
+
+<h2>3. 개인정보의 제3자 제공</h2>
+<p>운영자는 이용자의 개인정보를 제3자에게 제공하지 않습니다. 다만 이용자가 공개적으로 작성한 닉네임·리뷰·제보 내용은 앱의 다른 이용자에게 보입니다. 법령에 따른 요청이 있는 경우는 예외로 합니다.</p>
+
+<h2>4. 개인정보 처리 위탁 및 국외 이전</h2>
+<table>
+<tr><th>받는 자</th><th>내용</th><th>국가·위치</th></tr>
+<tr><td>Supabase, Inc.</td><td>서버·데이터베이스 운영(리뷰·제보·익명 계정 저장)</td><td>데이터는 대한민국 서울 리전(AWS ap-northeast-2)에 저장 / 회사 소재지 미국</td></tr>
+<tr><td>Google LLC (AdMob, Google Play 서비스)</td><td>광고 표시·측정, 위치 서비스 제공</td><td>미국 등 Google의 서버 소재국</td></tr>
+</table>
+<p>국외 이전은 앱 이용 시 네트워크를 통해 이루어지며, 각 회사의 개인정보 보호 정책을 따릅니다. 광고와 관련된 Google의 정보 처리는 <a href="https://policies.google.com/technologies/partner-sites?hl=ko">Google 파트너 사이트 정책</a>에서 확인할 수 있습니다. 국외 이전을 원하지 않으면 앱 사용을 중단하고 삭제할 수 있습니다.</p>
+
+<h2>5. 개인정보의 파기</h2>
+<p>보유 기간이 끝나거나 삭제 요청이 있으면 지체 없이 데이터베이스에서 복구할 수 없는 방법으로 삭제합니다.</p>
+
+<h2>6. 이용자의 권리와 행사 방법</h2>
+<ul>
+<li>앱의 <strong>설정 → 내 데이터 삭제</strong>에서 언제든지 내 계정과 리뷰·투표를 직접 삭제할 수 있습니다.</li>
+<li>내 리뷰는 화장실 상세 화면에서 수정·삭제할 수 있습니다.</li>
+<li>열람·정정·삭제·처리정지 요청은 아래 연락처로 보내주시면 지체 없이 처리합니다. 앱 삭제만으로는 서버의 데이터가 지워지지 않으니, 앱을 지우기 전에 '내 데이터 삭제'를 실행해 주세요. (<a href="delete-account.html">삭제 안내</a>)</li>
+</ul>
+
+<h2>7. 자동 수집 장치(광고 ID)의 설치·운영 및 거부</h2>
+<p>앱은 광고를 위해 Google의 광고 ID를 사용합니다. 휴대폰의 <em>설정 → 개인정보 보호(또는 Google) → 광고</em>에서 광고 ID를 삭제하거나 맞춤 광고를 끌 수 있습니다. 유럽 등 동의가 필요한 지역에서는 앱이 동의 화면을 보여주며, 앱의 <em>설정 → 광고 개인정보 설정</em>에서 선택을 바꿀 수 있습니다.</p>
+
+<h2>8. 안전성 확보 조치</h2>
+<ul>
+<li>모든 통신은 암호화(HTTPS)됩니다.</li>
+<li>데이터베이스는 접근 권한을 최소화하고, 앱은 검증된 서버 함수로만 데이터를 읽고 쓸 수 있습니다.</li>
+<li>공개되는 리뷰에는 실제 계정 식별자 대신 변환된 값만 표시합니다.</li>
+</ul>
+
+<h2>9. 아동의 개인정보</h2>
+<p>앱은 만 14세 미만 아동을 대상으로 하지 않으며, 나이 정보를 수집하지 않습니다. 만 14세 미만 아동이 정보를 남긴 사실을 알게 되면 해당 정보를 삭제합니다.</p>
+
+<h2>10. 개인정보 보호책임자</h2>
+<p>개인정보 보호책임자: 급해요 운영자<br>이메일: <a href="mailto:potuol0124@gmail.com">potuol0124@gmail.com</a></p>
+
+<h2>11. 권익침해 구제 방법</h2>
+<ul>
+<li>개인정보분쟁조정위원회: 1833-6972 (www.kopico.go.kr)</li>
+<li>개인정보침해신고센터: 국번없이 118 (privacy.kisa.or.kr)</li>
+<li>대검찰청: 국번없이 1301 (www.spo.go.kr) · 경찰청: 국번없이 182 (ecrm.police.go.kr)</li>
+</ul>
+
+<h2>12. 방침의 변경</h2>
+<p>이 방침이 바뀌면 시행 7일 전부터 이 페이지에 알립니다. 이용자 권리에 중요한 변경은 30일 전에 알립니다.</p>
+
+<hr id="en">
+<h1>Privacy Policy (English)</h1>
+<p class="muted">Effective: November 10, 2026 · App: Geuphaeyo (restroom finder) for Android</p>
+<p><strong>What we process.</strong> (1) A random anonymous user ID created when you first post a review or report (no name, email or phone number); (2) content you enter: nickname, reviews (rating, tags, text), door-code reports, opening-hours corrections, restrooms you add (name, the restroom's location, facilities) and abuse reports; (3) server logs: IP address and request time; (4) for ads, Google AdMob processes the advertising ID, device/app information, approximate (IP-based) location and ad interactions.</p>
+<p><strong>Your location.</strong> The app uses your phone's location only <em>on the device</em> to find the nearest restroom. Your location is never sent to or stored on our server. When you add a restroom, only the restroom location you pick on the map is stored.</p>
+<p><strong>Purpose.</strong> Showing restroom information and reviews to users, letting you edit or delete your own reviews, preventing spam and abuse, security, and showing ads.</p>
+<p><strong>Sharing and processors.</strong> We do not sell or share personal data with third parties. Public content (nickname, reviews, reports) is visible to other users. Processors: Supabase, Inc. (database hosting; data stored in Seoul, Korea — AWS ap-northeast-2) and Google LLC (AdMob ads, Google Play services), which may transfer data outside Korea.</p>
+<p><strong>Retention and deletion.</strong> Your anonymous account, nickname, reviews and votes are kept until you delete them in the app (<em>Settings → Delete my data</em>), which removes them immediately. Door-code and hours reports and restrooms you added remain as community information but are disconnected from your account. Server logs are deleted automatically within 90 days. See <a href="delete-account.html">how to delete your data</a>.</p>
+<p><strong>Ads choices.</strong> You can reset or delete your advertising ID or opt out of personalized ads in your phone settings. Where consent is required (e.g., EEA/UK), the app asks for consent and you can change it in <em>Settings → Ad privacy options</em>.</p>
+<p><strong>Children.</strong> The app is not directed to children under 14 and does not collect age information.</p>
+<p><strong>Contact.</strong> Privacy officer: Geuphaeyo operator — <a href="mailto:potuol0124@gmail.com">potuol0124@gmail.com</a></p>
+</main></body></html>

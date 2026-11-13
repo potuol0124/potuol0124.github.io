@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>급해요 좌표 연결</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .drop { border:2px dashed var(--line); border-radius:14px; padding:28px 16px; text-align:center; cursor:pointer; }
+  .drop.over { border-color:var(--accent); }
+  button { font:inherit; padding:12px 22px; border-radius:10px; border:0; background:var(--accent); color:#fff; cursor:pointer; }
+  button:disabled { opacity:.45; cursor:default; }
+  ul.files { padding-left:18px; } ul.files li { font-size:15px; }
+  .ok { color:#16a34a; } .warn { color:#d97706; } .err { color:#dc2626; }
+  progress { width:100%; height:14px; }
+  #log { font-size:14px; white-space:pre-wrap; background:var(--card); border-radius:10px; padding:10px 12px; max-height:240px; overflow:auto; }
+</style>
+</head>
+<body>
+<main>
+<h1>급해요 좌표 연결</h1>
+<p class="muted">주소정보 파일에서 화장실 위치에 필요한 줄만 골라 작은 결과 파일을 만듭니다. 파일은 이 PC 안에서만 처리되고 어디에도 전송되지 않습니다.</p>
+
+<div class="card">
+  <b>1. 파일 넣기</b>
+  <p>아래 상자에 <b>위치정보요약DB ZIP</b>과 <b>주소DB ZIP</b> 두 개를 끌어다 놓거나, 눌러서 고르세요. 압축을 푼 txt 파일들을 넣어도 됩니다.</p>
+  <div id="drop" class="drop">여기에 파일을 놓거나 눌러서 선택</div>
+  <input id="pick" type="file" multiple accept=".zip,.txt" hidden>
+  <ul id="files" class="files"></ul>
+</div>
+
+<div class="card">
+  <b>2. 시작</b>
+  <p>PC에 따라 5~15분 걸립니다. 끝날 때까지 이 창을 닫지 마세요.</p>
+  <button id="go" disabled>좌표 연결 시작</button>
+  <p><progress id="bar" max="1" value="0"></progress></p>
+  <div id="log">대기 중</div>
+</div>
+
+<div class="card" id="done" hidden>
+  <b>3. 결과 파일 보내기</b>
+  <p id="summary"></p>
+  <p><a id="dl" download="geuphaeyo_matched.txt.gz"><button>결과 파일 다시 받기</button></a></p>
+  <p>받아진 <b>geuphaeyo_matched.txt.gz</b> 파일을 GitHub <b>geuphaeyo-app</b> 저장소에 올리거나 Claude 대화창에 첨부하세요.</p>
+</div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const chosen = [];   // File 목록
+const logEl = $("log");
+function log(msg, cls) {
+  const line = document.createElement("div");
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  if (logEl.textContent === "대기 중") logEl.textContent = "";
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ---------- 파일 고르기
+function addFiles(list) {
+  for (const f of list) {
+    if (!chosen.some((c) => c.name === f.name && c.size === f.size)) chosen.push(f);
+  }
+  const ul = $("files");
+  ul.innerHTML = "";
+  for (const f of chosen) {
+    const li = document.createElement("li");
+    li.textContent = `${f.name} (${(f.size / 1e6).toFixed(1)} MB)`;
+    ul.appendChild(li);
+  }
+  $("go").disabled = chosen.length === 0;
+}
+$("drop").onclick = () => $("pick").click();
+$("pick").onchange = (e) => addFiles(e.target.files);
+$("drop").ondragover = (e) => { e.preventDefault(); $("drop").classList.add("over"); };
+$("drop").ondragleave = () => $("drop").classList.remove("over");
+$("drop").ondrop = (e) => { e.preventDefault(); $("drop").classList.remove("over"); addFiles(e.dataTransfer.files); };
+
+// ---------- 키 (tools/data/geocode_juso.py 와 같은 규칙)
+const int = (s) => String(parseInt(s, 10));
+const roadKey = (road, ug, main, sub) => `${road}|${int(ug)}|${int(main)}|${int(sub)}`;
+const jibunKey = (name, san, main, sub) => `${name}|${int(san)}|${int(main)}|${int(sub)}`;
+const codeKey = (code, ug, main, sub) => `${code}|${int(ug)}|${int(main)}|${int(sub)}`;
+
+function kindOf(firstLine) {
+  const n = firstLine.split("|").length - 1;
+  if (n === 17) return "E";
+  if (n === 10) {
+    const f = firstLine.split("|");
+    return (f[2].length === 10 && /^\d{1,3}$/.test(f[1])) ? "J" : "A";
+  }
+  return null;
+}
+
+// ---------- 텍스트 원본 (zip 안의 파일 또는 그냥 txt)
+// 각 원본: { label, open(onChunk) → Promise }  onChunk(Uint8Array)
+function zipNameDecoder(bytes) {
+  try { return new TextDecoder("utf-8", { fatal: true }).decode(bytes); }
+  catch (e) { return new TextDecoder("euc-kr").decode(bytes); }
+}
+async function collectSources(file, prefix, out) {
+  if (/\.zip$/i.test(file.name)) {
+    const zip = await JSZip.loadAsync(file, { decodeFileName: zipNameDecoder });
+    for (const entry of Object.values(zip.files)) {
+      if (entry.dir) continue;
+      const label = prefix + file.name + " › " + entry.name;
+      if (/\.zip$/i.test(entry.name)) {
+        const blob = await entry.async("blob");
+        await collectSources(new File([blob], entry.name), prefix + file.name + " › ", out);
+      } else if (/\.txt$/i.test(entry.name)) {
+        out.push({
+          label,
+          // onChunk 가 false 를 돌려주면 읽기를 멈춥니다 (첫 줄만 볼 때)
+          open: (onChunk) => new Promise((resolve, reject) => {
+            const st = entry.internalStream("uint8array");
+            let ended = false;
+            st.on("data", (d) => {
+              if (ended) return;
+              let more;
+              try { more = onChunk(d); } catch (e) { ended = true; st.pause(); reject(e); return; }
+              if (more === false) { ended = true; st.pause(); resolve(); }
+            })
+              .on("error", (e) => { if (!ended) { ended = true; reject(e); } })
+              .on("end", () => { if (!ended) { ended = true; resolve(); } })
+              .resume();
+          }),
+        });
+      }
+    }
+  } else if (/\.txt$/i.test(file.name)) {
+    out.push({
+      label: prefix + file.name,
+      open: async (onChunk) => {
+        const reader = file.stream().getReader();
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (onChunk(value) === false) { await reader.cancel(); break; }
+        }
+      },
+    });
+  }
+}
+
+// 원본을 줄 단위로 읽기. 인코딩은 BOM/UTF-8 검사로 정함(아니면 CP949).
+async function eachLine(src, onLine) {
+  let decoder = null, rest = "", stop = false;
+  await src.open((chunk) => {
+    if (stop) return false;
+    if (!decoder) {
+      let enc = "euc-kr";
+      if (chunk[0] === 0xEF && chunk[1] === 0xBB && chunk[2] === 0xBF) enc = "utf-8";
+      else {
+        try { new TextDecoder("utf-8", { fatal: true }).decode(chunk.subarray(0, Math.min(chunk.length, 65536)), { stream: true }); enc = "utf-8"; }
+        catch (e) { enc = "euc-kr"; }
+      }
+      decoder = new TextDecoder(enc);
+    }
+    const text = rest + decoder.decode(chunk, { stream: true });
+    const lines = text.split(/\r?\n/);
+    rest = lines.pop();
+    for (const l of lines) {
+      if (!l) continue;
+      if (onLine(l.replace(/^\uFEFF/, "")) === false) { stop = true; return false; }
+    }
+    return true;
+  });
+  if (!stop && decoder) {
+    const last = rest + decoder.decode();
+    if (last.trim()) onLine(last.replace(/^\uFEFF/, ""));
+  }
+}
+
+// ---------- 실행
+$("go").onclick = async () => {
+  $("go").disabled = true;
+  $("done").hidden = true;
+  logEl.textContent = "";
+  try {
+    log("화장실 주소 목록 불러오는 중…");
+    const w = await (await fetch("wanted.json", { cache: "no-store" })).json();
+    const roads = new Set(w.roads), jibuns = new Set(w.jibuns);
+    log(`찾을 도로명 주소 ${roads.size.toLocaleString()}개, 지번 ${jibuns.size.toLocaleString()}개`);
+
+    const sources = [];
+    for (const f of chosen) {
+      try { await collectSources(f, "", sources); }
+      catch (e) { log(`${f.name}: 압축 파일을 열 수 없습니다 (${e.message})`, "err"); }
+    }
+    // 종류 판별 (첫 줄만 읽음)
+    const byKind = { J: [], A: [], E: [] };
+    for (const s of sources) {
+      let first = null;
+      await eachLine(s, (l) => { first = l; return false; });
+      const k = first ? kindOf(first) : null;
+      if (k) byKind[k].push(s);
+    }
+    const names = { E: "위치정보요약DB", A: "주소DB(주소)", J: "주소DB(지번)" };
+    for (const k of ["E", "A", "J"]) log(`${names[k]} 파일 ${byKind[k].length}개`, byKind[k].length ? "ok" : "warn");
+    if (!byKind.E.length) throw new Error("위치정보요약DB(entrc_로 시작하는 파일)를 찾지 못했습니다. 올바른 ZIP을 넣었는지 확인하세요.");
+    if (!byKind.J.length || !byKind.A.length) log("주소DB가 없으면 지번주소만 있는 화장실은 위치를 찾지 못합니다.", "warn");
+
+    const total = byKind.J.length + byKind.A.length + byKind.E.length;
+    let doneFiles = 0;
+    const out = [];
+    const mgmt = new Set(), codes = new Set();
+    const tick = () => { doneFiles++; $("bar").value = doneFiles / total; };
+
+    for (const s of byKind.J) {
+      await eachLine(s, (l) => {
+        const f = l.split("|");
+        if (f.length !== 11) return;
+        if (jibuns.has(jibunKey(f[6] || f[5], f[7], f[8], f[9]))) { out.push("J|" + l); mgmt.add(f[0]); }
+      });
+      tick(); log(`✓ ${s.label}`);
+    }
+    for (const s of byKind.A) {
+      await eachLine(s, (l) => {
+        const f = l.split("|");
+        if (f.length !== 11) return;
+        if (mgmt.has(f[0])) { out.push("A|" + l); codes.add(codeKey(f[1], f[3], f[4], f[5])); }
+      });
+      tick(); log(`✓ ${s.label}`);
+    }
+    let eCount = 0;
+    for (const s of byKind.E) {
+      await eachLine(s, (l) => {
+        const f = l.split("|");
+        if (f.length !== 18) return;
+        if (roads.has(roadKey(f[7], f[8], f[9], f[10])) || codes.has(codeKey(f[6], f[8], f[9], f[10]))) { out.push("E|" + l); eCount++; }
+      });
+      tick(); log(`✓ ${s.label}`);
+    }
+
+    const header = `#geuphaeyo-matched v${w.v} ${new Date().toISOString()} files:E=${byKind.E.length},A=${byKind.A.length},J=${byKind.J.length}`;
+    const text = header + "\n" + out.join("\n") + "\n";
+    const gz = await new Response(new Blob([text]).stream().pipeThrough(new CompressionStream("gzip"))).blob();
+    const url = URL.createObjectURL(gz);
+    $("dl").href = url;
+    $("summary").textContent = `완료! 건물 출입구 ${eCount.toLocaleString()}건을 찾았습니다. 결과 파일 크기 ${(gz.size / 1e6).toFixed(1)} MB`;
+    $("done").hidden = false;
+    log("완료! 결과 파일을 내려받습니다.", "ok");
+    $("dl").click();
+  } catch (e) {
+    log("오류: " + e.message, "err");
+  } finally {
+    $("go").disabled = chosen.length === 0;
+  }
+};
+</script>
+</body>
+</html>

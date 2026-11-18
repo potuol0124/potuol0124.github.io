@@ -1,0 +1,31 @@
+{
+  "name": "weather-stock-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:firebase": "vite --mode firebase",
+    "typecheck": "tsc --noEmit -p .",
+    "build": "tsc --noEmit -p . && vite build && ait build",
+    "build:toss": "tsc --noEmit -p . && vite build --mode firebase && ait build",
+    "build:web": "tsc --noEmit -p . && vite build",
+    "preview": "vite preview",
+    "deploy": "ait deploy"
+  },
+  "dependencies": {
+    "@apps-in-toss/web-framework": "^3.10.0",
+    "firebase": "^13.4.0",
+    "react": "19.2",
+    "react-dom": "19.2"
+  },
+  "devDependencies": {
+    "@apps-in-toss/devtools": "^3.10.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.8",
+    "vitest": "^4.1.12"
+  }
+}
